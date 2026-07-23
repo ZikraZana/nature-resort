@@ -62,7 +62,7 @@ function csrf_field() {
  */
 function is_active($path) {
     $current = $_SERVER['REQUEST_URI'] ?? '';
-    return strpos($current, $path) !== false ? 'text-accent font-semibold' : '';
+    return strpos($current, $path) !== false ? 'text-accent font-semibold underline' : '';
 }
 
 /**

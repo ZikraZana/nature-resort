@@ -78,7 +78,7 @@ include __DIR__ . '/../includes/navbar_resepsionis.php';
                     <?php else: ?>
                     <div class="overflow-x-auto">
                         <table class="w-full">
-                            <thead><tr class="bg-cream/50"><th class="px-6 py-3 text-left text-xs font-semibold text-earth uppercase">Nama Tamu</th><th class="px-6 py-3 text-left text-xs font-semibold text-earth uppercase">Kontak</th><th class="px-6 py-3 text-center text-xs font-semibold text-earth uppercase">Jumlah</th></tr></thead>
+                            <thead><tr class="bg-white"><th class="px-6 py-3 text-left text-xs font-semibold text-earth uppercase">Nama Tamu</th><th class="px-6 py-3 text-left text-xs font-semibold text-earth uppercase">Kontak</th><th class="px-6 py-3 text-center text-xs font-semibold text-earth uppercase">Jumlah</th></tr></thead>
                             <tbody class="divide-y divide-cream">
                                 <?php foreach ($j['peserta'] as $p): ?>
                                 <tr><td class="px-6 py-3 text-sm font-medium text-dark"><?= e($p['tamu_nama']) ?></td><td class="px-6 py-3 text-sm text-earth"><?= e($p['tamu_kontak'] ?: '-') ?></td><td class="px-6 py-3 text-sm text-center"><?= $p['jumlah_peserta'] ?> orang</td></tr>

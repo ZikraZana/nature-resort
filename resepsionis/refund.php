@@ -83,7 +83,7 @@ include __DIR__ . '/../includes/navbar_resepsionis.php';
             <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full">
-                        <thead><tr class="bg-cream/50">
+                        <thead><tr class="bg-white">
                             <th class="px-6 py-3 text-left text-xs font-semibold text-earth uppercase tracking-wider">Booking</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-earth uppercase tracking-wider">Tamu</th>
                             <th class="px-6 py-3 text-right text-xs font-semibold text-earth uppercase tracking-wider">Nominal</th>

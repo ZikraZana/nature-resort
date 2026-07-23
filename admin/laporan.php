@@ -172,7 +172,7 @@ include __DIR__ . '/../includes/navbar_admin.php';
                 <div class="p-6 border-b border-cream"><h2 class="font-semibold text-dark">10 Booking Terbaru</h2></div>
                 <div class="overflow-x-auto">
                     <table class="w-full">
-                        <thead><tr class="bg-cream/50">
+                        <thead><tr class="bg-white">
                             <th class="px-6 py-3 text-left text-xs font-semibold text-earth uppercase">ID</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-earth uppercase">Tamu</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-earth uppercase">Kamar</th>

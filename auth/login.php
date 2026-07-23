@@ -99,8 +99,8 @@ include __DIR__ . '/../includes/header.php';
 <div class="min-h-screen flex">
     <!-- Left: Image -->
     <div class="hidden lg:flex lg:w-1/2 relative">
-        <img src="https://placehold.co/960x1080/2D5016/FDF6E3?text=Kincay+Mania%0AHotel+%26+Resort"
-            alt="Alam Kerinci"
+        <img src="<?= BASE_URL ?>/assets/img/hero-rawa-bento.jpg"
+            alt="Rawa Bento, Kerinci"
             class="w-full h-full object-cover">
         <div class="absolute inset-0 bg-dark/50"></div>
         <div class="absolute inset-0 flex items-center justify-center p-12">

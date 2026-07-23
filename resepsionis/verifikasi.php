@@ -45,7 +45,7 @@ include __DIR__ . '/../includes/navbar_resepsionis.php';
             <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full">
-                        <thead><tr class="bg-cream border-b border-cream-dark">
+                        <thead><tr class="bg-white border-b border-cream-dark">
                             <th class="px-6 py-4 text-left text-xs font-semibold text-earth uppercase tracking-wider">Booking</th>
                             <th class="px-6 py-4 text-left text-xs font-semibold text-earth uppercase tracking-wider">Tamu</th>
                             <th class="px-6 py-4 text-left text-xs font-semibold text-earth uppercase tracking-wider">Kamar</th>
