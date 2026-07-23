@@ -10,19 +10,23 @@ $pageTitle = 'Beranda';
 $pageDescription = 'Kincay Mania Hotel & Resort — Nature Resort di jantung Kerinci. Nikmati penginapan kabin alam, paket wisata trekking & river tubing, serta kuliner lokal autentik.';
 $navbarTransparent = true;
 
-// Dummy data kamar
-$kamarHighlight = [
-    ['id' => 1, 'nama' => 'Kabin Pinus A1', 'tipe' => 'Kabin', 'kapasitas' => 2, 'harga' => 450000, 'foto' => 'https://images.unsplash.com/photo-1618767689160-da3fb810aad7?w=600&h=400&fit=crop', 'deskripsi' => 'Kabin kayu eksklusif di tengah hutan pinus'],
-    ['id' => 3, 'nama' => 'Kamar Deluxe B1', 'tipe' => 'Deluxe', 'kapasitas' => 4, 'harga' => 750000, 'foto' => 'https://images.unsplash.com/photo-1590490360182-c33d955f4c4e?w=600&h=400&fit=crop', 'deskripsi' => 'Kamar luas dengan pemandangan gunung Kerinci'],
-    ['id' => 5, 'nama' => 'Suite Kerinci C1', 'tipe' => 'Suite', 'kapasitas' => 6, 'harga' => 1200000, 'foto' => 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&h=400&fit=crop', 'deskripsi' => 'Suite premium dengan balkon privat dan jacuzzi'],
-];
+// Query 3 kamar highlight dari database
+$stmt = db()->query("SELECT id, nama, tipe, kapasitas, harga_per_malam AS harga, foto, deskripsi FROM kamar WHERE status_default = 'tersedia' ORDER BY harga_per_malam DESC LIMIT 3");
+$kamarHighlight = $stmt->fetchAll();
+foreach ($kamarHighlight as &$k) {
+    if (empty($k['foto'])) $k['foto'] = 'https://images.unsplash.com/photo-1618767689160-da3fb810aad7?w=600&h=400&fit=crop';
+    elseif (!str_starts_with($k['foto'], 'http')) $k['foto'] = BASE_URL . '/uploads/' . $k['foto'];
+}
+unset($k);
 
-// Dummy data paket wisata
-$paketHighlight = [
-    ['id' => 1, 'nama' => 'Trekking Gunung Kerinci', 'kategori' => 'trekking', 'harga' => 350000, 'foto' => 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&h=400&fit=crop', 'deskripsi' => 'Jelajahi puncak tertinggi Sumatera dengan pemandu berpengalaman'],
-    ['id' => 2, 'nama' => 'River Tubing Sungai Kerinci', 'kategori' => 'perahu', 'harga' => 250000, 'foto' => 'https://images.unsplash.com/photo-1530866495561-507c83580c5d?w=600&h=400&fit=crop', 'deskripsi' => 'Arungi jeram sungai Kerinci yang memacu adrenalin'],
-    ['id' => 4, 'nama' => 'Wisata Kuliner Lokal', 'kategori' => 'kuliner', 'harga' => 150000, 'foto' => 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=400&fit=crop', 'deskripsi' => 'Cicipi masakan khas Kerinci langsung dari dapur tradisional'],
-];
+// Query 3 paket wisata highlight
+$stmt = db()->query("SELECT id, nama, kategori, harga, foto, deskripsi FROM paket_wisata WHERE status = 'aktif' ORDER BY RAND() LIMIT 3");
+$paketHighlight = $stmt->fetchAll();
+foreach ($paketHighlight as &$p) {
+    if (empty($p['foto'])) $p['foto'] = 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&h=400&fit=crop';
+    elseif (!str_starts_with($p['foto'], 'http')) $p['foto'] = BASE_URL . '/uploads/' . $p['foto'];
+}
+unset($p);
 
 include __DIR__ . '/../includes/header.php';
 include __DIR__ . '/../includes/navbar_guest.php';

@@ -4,19 +4,39 @@ require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/auth_check.php';
 require_role('resepsionis');
 $pageTitle = 'Dashboard Resepsionis';
+
+// Real stats
+$today = date('Y-m-d');
+
+$stmtVer = db()->prepare("SELECT COUNT(*) FROM pembayaran p JOIN booking b ON b.id = p.booking_id WHERE p.status = 'menunggu' AND b.status = 'menunggu_verifikasi'");
+$stmtVer->execute();
+$countVerifikasi = $stmtVer->fetchColumn();
+
+$stmtCI = db()->prepare("SELECT COUNT(*) FROM booking WHERE status = 'dikonfirmasi' AND tanggal_checkin <= ?");
+$stmtCI->execute([$today]);
+$countCheckin = $stmtCI->fetchColumn();
+
+$stmtCO = db()->prepare("SELECT COUNT(*) FROM booking WHERE status = 'checkin'");
+$stmtCO->execute();
+$countCheckout = $stmtCO->fetchColumn();
+
+$stmtRef = db()->prepare("SELECT COUNT(*) FROM refund WHERE status = 'menunggu'");
+$stmtRef->execute();
+$countRefund = $stmtRef->fetchColumn();
+
 include __DIR__ . '/../includes/header.php';
 include __DIR__ . '/../includes/navbar_resepsionis.php';
 ?>
     <section class="pt-24 pb-16 bg-cream min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="mb-8"><h1 class="font-sans text-3xl text-dark font-bold">Dashboard Resepsionis</h1><p class="text-earth mt-1">Selamat datang, Siti! Berikut ringkasan operasional hari ini.</p></div>
+            <div class="mb-8"><h1 class="font-sans text-3xl text-dark font-bold">Dashboard Resepsionis</h1><p class="text-earth mt-1">Selamat datang, <?= e($_SESSION['nama'] ?? 'Resepsionis') ?>! Berikut ringkasan operasional hari ini.</p></div>
 
             <!-- Stat Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <div class="stat-gradient-gold rounded-2xl p-6 text-white"><div class="flex items-center justify-between mb-4"><span class="text-sm font-medium text-white/80">Menunggu Verifikasi</span><div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div></div><p class="text-4xl font-bold">3</p><a href="<?= BASE_URL ?>/resepsionis/verifikasi.php" class="text-xs text-white/70 hover:text-white mt-2 inline-flex items-center gap-1">Lihat semua →</a></div>
-                <div class="stat-gradient-green rounded-2xl p-6 text-white"><div class="flex items-center justify-between mb-4"><span class="text-sm font-medium text-white/80">Check-in Hari Ini</span><div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg></div></div><p class="text-4xl font-bold">2</p><a href="<?= BASE_URL ?>/resepsionis/checkin.php" class="text-xs text-white/70 hover:text-white mt-2 inline-flex items-center gap-1">Lihat semua →</a></div>
-                <div class="stat-gradient-earth rounded-2xl p-6 text-white"><div class="flex items-center justify-between mb-4"><span class="text-sm font-medium text-white/80">Check-out Hari Ini</span><div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></div></div><p class="text-4xl font-bold">1</p><a href="<?= BASE_URL ?>/resepsionis/checkout.php" class="text-xs text-white/70 hover:text-white mt-2 inline-flex items-center gap-1">Lihat semua →</a></div>
-                <div class="stat-gradient-dark rounded-2xl p-6 text-white"><div class="flex items-center justify-between mb-4"><span class="text-sm font-medium text-white/80">Menunggu Refund</span><div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg></div></div><p class="text-4xl font-bold">1</p><a href="<?= BASE_URL ?>/resepsionis/refund.php" class="text-xs text-white/70 hover:text-white mt-2 inline-flex items-center gap-1">Lihat semua →</a></div>
+                <div class="stat-gradient-gold rounded-2xl p-6 text-white"><div class="flex items-center justify-between mb-4"><span class="text-sm font-medium text-white/80">Menunggu Verifikasi</span><div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div></div><p class="text-4xl font-bold"><?= $countVerifikasi ?></p><a href="<?= BASE_URL ?>/resepsionis/verifikasi.php" class="text-xs text-white/70 hover:text-white mt-2 inline-flex items-center gap-1">Lihat semua →</a></div>
+                <div class="stat-gradient-green rounded-2xl p-6 text-white"><div class="flex items-center justify-between mb-4"><span class="text-sm font-medium text-white/80">Check-in Hari Ini</span><div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg></div></div><p class="text-4xl font-bold"><?= $countCheckin ?></p><a href="<?= BASE_URL ?>/resepsionis/checkin.php" class="text-xs text-white/70 hover:text-white mt-2 inline-flex items-center gap-1">Lihat semua →</a></div>
+                <div class="stat-gradient-earth rounded-2xl p-6 text-white"><div class="flex items-center justify-between mb-4"><span class="text-sm font-medium text-white/80">Perlu Check-out</span><div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></div></div><p class="text-4xl font-bold"><?= $countCheckout ?></p><a href="<?= BASE_URL ?>/resepsionis/checkout.php" class="text-xs text-white/70 hover:text-white mt-2 inline-flex items-center gap-1">Lihat semua →</a></div>
+                <div class="stat-gradient-dark rounded-2xl p-6 text-white"><div class="flex items-center justify-between mb-4"><span class="text-sm font-medium text-white/80">Menunggu Refund</span><div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg></div></div><p class="text-4xl font-bold"><?= $countRefund ?></p><a href="<?= BASE_URL ?>/resepsionis/refund.php" class="text-xs text-white/70 hover:text-white mt-2 inline-flex items-center gap-1">Lihat semua →</a></div>
             </div>
 
             <!-- Quick Actions -->

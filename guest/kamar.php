@@ -7,24 +7,42 @@ require_once __DIR__ . '/../config/config.php';
 $pageTitle = 'Kamar & Kabin';
 $pageDescription = 'Jelajahi pilihan kamar dan kabin eksklusif di Kincay Mania Hotel & Resort — dari kabin pinus hingga suite premium.';
 
-// Dummy data semua kamar
-$kamarList = [
-    ['id' => 1, 'nama' => 'Kabin Pinus A1', 'tipe' => 'Kabin', 'kapasitas' => 2, 'harga' => 450000, 'foto' => 'https://images.unsplash.com/photo-1618767689160-da3fb810aad7?w=600&h=400&fit=crop', 'deskripsi' => 'Kabin kayu eksklusif di tengah hutan pinus dengan pemandangan gunung.', 'status' => 'tersedia'],
-    ['id' => 2, 'nama' => 'Kabin Pinus A2', 'tipe' => 'Kabin', 'kapasitas' => 2, 'harga' => 450000, 'foto' => 'https://images.unsplash.com/photo-1510798831971-661eb04b3739?w=600&h=400&fit=crop', 'deskripsi' => 'Kabin kayu nyaman dengan teras privat menghadap kebun teh.', 'status' => 'tersedia'],
-    ['id' => 3, 'nama' => 'Kamar Deluxe B1', 'tipe' => 'Deluxe', 'kapasitas' => 4, 'harga' => 750000, 'foto' => 'https://images.unsplash.com/photo-1590490360182-c33d955f4c4e?w=600&h=400&fit=crop', 'deskripsi' => 'Kamar luas dengan pemandangan Gunung Kerinci, AC, dan TV kabel.', 'status' => 'tersedia'],
-    ['id' => 4, 'nama' => 'Kamar Deluxe B2', 'tipe' => 'Deluxe', 'kapasitas' => 4, 'harga' => 750000, 'foto' => 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=600&h=400&fit=crop', 'deskripsi' => 'Kamar deluxe dengan balkon dan area duduk nyaman.', 'status' => 'maintenance'],
-    ['id' => 5, 'nama' => 'Suite Kerinci C1', 'tipe' => 'Suite', 'kapasitas' => 6, 'harga' => 1200000, 'foto' => 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&h=400&fit=crop', 'deskripsi' => 'Suite premium dengan ruang tamu terpisah, jacuzzi, dan balkon panorama.', 'status' => 'tersedia'],
-    ['id' => 6, 'nama' => 'Standard Room D1', 'tipe' => 'Standard', 'kapasitas' => 2, 'harga' => 300000, 'foto' => 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&h=400&fit=crop', 'deskripsi' => 'Kamar standar bersih dan nyaman, cocok untuk backpacker.', 'status' => 'tersedia'],
-];
-
-// Filter dummy
+// Query kamar dari database
 $filterTipe = $_GET['tipe'] ?? '';
 $filterCheckin = $_GET['checkin'] ?? '';
 $filterCheckout = $_GET['checkout'] ?? '';
 
+$sql = "SELECT id, nama, tipe, kapasitas, harga_per_malam AS harga, foto, deskripsi, status_default AS status FROM kamar WHERE status_default != 'nonaktif'";
+$params = [];
+
 if ($filterTipe) {
-    $kamarList = array_filter($kamarList, fn($k) => $k['tipe'] === $filterTipe);
+    $sql .= ' AND tipe = ?';
+    $params[] = $filterTipe;
 }
+
+// Jika filter tanggal, exclude kamar yang sudah di-book
+if ($filterCheckin && $filterCheckout) {
+    $sql .= ' AND id NOT IN (SELECT kamar_id FROM booking WHERE status NOT IN (?,?) AND tanggal_checkin < ? AND tanggal_checkout > ?)';
+    $params[] = 'dibatalkan';
+    $params[] = 'ditolak';
+    $params[] = $filterCheckout;
+    $params[] = $filterCheckin;
+}
+
+$sql .= ' ORDER BY tipe, nama';
+$stmt = db()->prepare($sql);
+$stmt->execute($params);
+$kamarList = $stmt->fetchAll();
+
+// Default foto jika kosong
+foreach ($kamarList as &$k) {
+    if (empty($k['foto'])) {
+        $k['foto'] = 'https://images.unsplash.com/photo-1618767689160-da3fb810aad7?w=600&h=400&fit=crop';
+    } elseif (!str_starts_with($k['foto'], 'http')) {
+        $k['foto'] = BASE_URL . '/uploads/' . $k['foto'];
+    }
+}
+unset($k);
 
 $tipeList = ['Kabin', 'Standard', 'Deluxe', 'Suite'];
 

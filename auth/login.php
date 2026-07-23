@@ -31,23 +31,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
 
     if (empty($errors)) {
         // Cari user di database — prepared statement, tidak ada string concat
-        $stmt = db()->prepare('SELECT id, nama, email, password_hash, role FROM users WHERE email = ? LIMIT 1');
+        $stmt = db()->prepare('SELECT id, nama, email, password_hash, role, status FROM users WHERE email = ? LIMIT 1');
         $stmt->execute([$email]);
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password_hash'])) {
-            // Login berhasil — regenerate session ID untuk mencegah session fixation
-            session_regenerate_id(true);
+            // Cek status akun — nonaktif tidak boleh login
+            if ($user['status'] === 'nonaktif') {
+                $errors[] = 'Akun Anda telah dinonaktifkan. Silakan hubungi admin.';
+                usleep(300_000);
+            } else {
+                // Login berhasil — regenerate session ID untuk mencegah session fixation
+                session_regenerate_id(true);
 
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['nama']    = $user['nama'];
-            $_SESSION['email']   = $user['email'];
-            $_SESSION['role']    = $user['role'];
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['nama']    = $user['nama'];
+                $_SESSION['email']   = $user['email'];
+                $_SESSION['role']    = $user['role'];
 
-            // Redirect sesuai role
-            $redirect = dashboard_url($user['role']);
-            header('Location: ' . $redirect);
-            exit;
+                // Redirect sesuai role
+                $redirect = dashboard_url($user['role']);
+                header('Location: ' . $redirect);
+                exit;
+            }
         } else {
             // Pesan generik — tidak spesifik email atau password (security best practice)
             $errors[] = 'Email atau password salah.';

@@ -7,17 +7,42 @@ require_once __DIR__ . '/../config/config.php';
 $pageTitle = 'Paket Wisata Alam';
 $pageDescription = 'Jelajahi paket wisata alam Kerinci — trekking Gunung Kerinci, river tubing, susur perahu, dan wisata kuliner lokal.';
 
-$paketList = [
-    ['id' => 1, 'nama' => 'Trekking Gunung Kerinci', 'kategori' => 'trekking', 'harga' => 350000, 'foto' => 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&h=400&fit=crop', 'deskripsi' => 'Jelajahi puncak tertinggi Sumatera dengan pemandu profesional. Durasi 2 hari 1 malam termasuk camping.', 'sisa_kuota' => 8],
-    ['id' => 2, 'nama' => 'Susur Sungai Batang Merangin', 'kategori' => 'perahu', 'harga' => 200000, 'foto' => 'https://images.unsplash.com/photo-1529011060498-3553d7bee26a?w=600&h=400&fit=crop', 'deskripsi' => 'Nikmati keindahan tepian sungai Batang Merangin dengan perahu tradisional. Durasi 3 jam.', 'sisa_kuota' => 12],
-    ['id' => 3, 'nama' => 'River Tubing Sungai Kerinci', 'kategori' => 'perahu', 'harga' => 250000, 'foto' => 'https://images.unsplash.com/photo-1530866495561-507c83580c5d?w=600&h=400&fit=crop', 'deskripsi' => 'Arungi jeram sungai Kerinci yang memacu adrenalin. Cocok untuk pencinta petualangan!', 'sisa_kuota' => 5],
-    ['id' => 4, 'nama' => 'Wisata Kuliner Lokal Kerinci', 'kategori' => 'kuliner', 'harga' => 150000, 'foto' => 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=400&fit=crop', 'deskripsi' => 'Cicipi masakan khas Kerinci — gulai ikan semah, dendeng batokok, dan kopi Kayu Aro.', 'sisa_kuota' => 15],
-];
-
+// Query paket wisata dari database
 $filterKategori = $_GET['kategori'] ?? '';
+
+$sql = "SELECT id, nama, kategori, harga, foto, deskripsi FROM paket_wisata WHERE status = 'aktif'";
+$params = [];
 if ($filterKategori) {
-    $paketList = array_filter($paketList, fn($p) => $p['kategori'] === $filterKategori);
+    $sql .= ' AND kategori = ?';
+    $params[] = $filterKategori;
 }
+$sql .= ' ORDER BY kategori, nama';
+$stmt = db()->prepare($sql);
+$stmt->execute($params);
+$paketList = $stmt->fetchAll();
+
+// Default foto & hitung sisa kuota terdekat
+foreach ($paketList as &$p) {
+    if (empty($p['foto'])) {
+        $p['foto'] = 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&h=400&fit=crop';
+    } elseif (!str_starts_with($p['foto'], 'http')) {
+        $p['foto'] = BASE_URL . '/uploads/' . $p['foto'];
+    }
+    // Cari jadwal terdekat yang masih ada kuota
+    $stmtKuota = db()->prepare(
+        "SELECT jw.kuota_maksimal - COALESCE(SUM(bpw.jumlah_peserta), 0) AS sisa
+         FROM jadwal_wisata jw
+         LEFT JOIN booking_paket_wisata bpw ON bpw.jadwal_wisata_id = jw.id
+         LEFT JOIN booking b ON b.id = bpw.booking_id AND b.status NOT IN ('dibatalkan','ditolak')
+         WHERE jw.paket_wisata_id = ? AND jw.tanggal >= CURDATE()
+         GROUP BY jw.id HAVING sisa > 0
+         ORDER BY jw.tanggal LIMIT 1"
+    );
+    $stmtKuota->execute([$p['id']]);
+    $row = $stmtKuota->fetch();
+    $p['sisa_kuota'] = $row ? (int)$row['sisa'] : 0;
+}
+unset($p);
 
 $kategoriLabels = ['trekking' => 'Trekking', 'perahu' => 'River / Perahu', 'kuliner' => 'Kuliner'];
 $kategoriColors = ['trekking' => 'bg-success text-white', 'perahu' => 'bg-info text-white', 'kuliner' => 'bg-secondary text-white'];

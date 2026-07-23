@@ -13,9 +13,10 @@
                     <a href="<?= BASE_URL ?>/admin/kelola_jadwal.php" class="px-3 py-2 text-sm text-cream/80 hover:text-accent rounded-lg transition-colors <?= is_active('/admin/kelola_jadwal') ?>">Jadwal</a>
                     <a href="<?= BASE_URL ?>/admin/kelola_user.php" class="px-3 py-2 text-sm text-cream/80 hover:text-accent rounded-lg transition-colors <?= is_active('/admin/kelola_user') ?>">User</a>
                     <a href="<?= BASE_URL ?>/admin/laporan.php" class="px-3 py-2 text-sm text-cream/80 hover:text-accent rounded-lg transition-colors <?= is_active('/admin/laporan') ?>">Laporan</a>
+                    <a href="<?= BASE_URL ?>/admin/pengaturan.php" class="px-3 py-2 text-sm text-cream/80 hover:text-accent rounded-lg transition-colors <?= is_active('/admin/pengaturan') ?>">Pengaturan</a>
                 </div>
                 <div class="hidden lg:flex items-center gap-3">
-                    <div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full bg-danger/20 flex items-center justify-center"><span class="text-sm font-bold text-danger">A</span></div><span class="text-sm text-white">Admin</span></div>
+                    <div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full bg-danger/20 flex items-center justify-center"><span class="text-sm font-bold text-danger"><?= strtoupper(substr($_SESSION['nama'] ?? 'A', 0, 1)) ?></span></div><span class="text-sm text-white"><?= e($_SESSION['nama'] ?? 'Admin') ?></span></div>
                     <a href="<?= BASE_URL ?>/auth/logout.php" class="p-2 text-cream/60 hover:text-danger transition-colors" title="Logout"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></a>
                 </div>
                 <button id="mobile-menu-btn" class="lg:hidden text-cream/80 hover:text-white p-2"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path id="menu-icon-open" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/><path id="menu-icon-close" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
@@ -29,6 +30,7 @@
                 <a href="<?= BASE_URL ?>/admin/kelola_jadwal.php" class="block px-4 py-2.5 text-cream/80 hover:text-accent hover:bg-white/5 rounded-lg text-sm">Kelola Jadwal</a>
                 <a href="<?= BASE_URL ?>/admin/kelola_user.php" class="block px-4 py-2.5 text-cream/80 hover:text-accent hover:bg-white/5 rounded-lg text-sm">Kelola User</a>
                 <a href="<?= BASE_URL ?>/admin/laporan.php" class="block px-4 py-2.5 text-cream/80 hover:text-accent hover:bg-white/5 rounded-lg text-sm">Laporan</a>
+                <a href="<?= BASE_URL ?>/admin/pengaturan.php" class="block px-4 py-2.5 text-cream/80 hover:text-accent hover:bg-white/5 rounded-lg text-sm">Pengaturan</a>
                 <div class="border-t border-white/10 pt-3 mt-3"><a href="<?= BASE_URL ?>/auth/logout.php" class="block px-4 py-2.5 text-danger hover:bg-danger/10 rounded-lg text-sm">Keluar</a></div>
             </div>
         </div>

@@ -6,18 +6,20 @@ require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/auth_check.php';
 require_role('tamu');
 
-// Dummy data detail kamar
-$kamarData = [
-    1 => ['id' => 1, 'nama' => 'Kabin Pinus A1', 'tipe' => 'Kabin', 'kapasitas' => 2, 'harga' => 450000, 'foto' => 'https://images.unsplash.com/photo-1618767689160-da3fb810aad7?w=900&h=600&fit=crop', 'deskripsi' => "Kabin kayu eksklusif yang terletak di tengah hutan pinus Kerinci. Didesain dengan konsep rustic-modern, kabin ini menawarkan pengalaman menginap yang unik dengan pemandangan gunung yang memukau.\n\nDilengkapi dengan tempat tidur queen-size, kamar mandi dalam dengan air panas, teras privat, serta fasilitas dasar seperti handuk, perlengkapan mandi, dan Wi-Fi.", 'fasilitas' => ['Tempat Tidur Queen-Size', 'Kamar Mandi Dalam', 'Air Panas', 'Teras Privat', 'Wi-Fi Gratis', 'Handuk & Perlengkapan Mandi']],
-    2 => ['id' => 2, 'nama' => 'Kabin Pinus A2', 'tipe' => 'Kabin', 'kapasitas' => 2, 'harga' => 450000, 'foto' => 'https://images.unsplash.com/photo-1510798831971-661eb04b3739?w=900&h=600&fit=crop', 'deskripsi' => "Kabin kayu nyaman dengan teras privat menghadap kebun teh Kayu Aro. Suasana tenang dan sejuk, sempurna untuk pasangan yang mencari ketenangan.\n\nDilengkapi fasilitas lengkap untuk kenyamanan Anda.", 'fasilitas' => ['Tempat Tidur Queen-Size', 'Kamar Mandi Dalam', 'Air Panas', 'Teras Privat', 'Wi-Fi Gratis', 'Pemandangan Kebun Teh']],
-    3 => ['id' => 3, 'nama' => 'Kamar Deluxe B1', 'tipe' => 'Deluxe', 'kapasitas' => 4, 'harga' => 750000, 'foto' => 'https://images.unsplash.com/photo-1590490360182-c33d955f4c4e?w=900&h=600&fit=crop', 'deskripsi' => "Kamar deluxe yang luas dengan pemandangan Gunung Kerinci langsung dari jendela. Cocok untuk keluarga kecil atau rombongan.\n\nDilengkapi dengan 2 tempat tidur single atau 1 king-size, AC, TV kabel, minibar, dan balkon.", 'fasilitas' => ['2 Tempat Tidur / 1 King-Size', 'AC', 'TV Kabel', 'Minibar', 'Balkon', 'Kamar Mandi Dalam', 'Air Panas', 'Wi-Fi Gratis']],
-    4 => ['id' => 4, 'nama' => 'Kamar Deluxe B2', 'tipe' => 'Deluxe', 'kapasitas' => 4, 'harga' => 750000, 'foto' => 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=900&h=600&fit=crop', 'deskripsi' => "Kamar deluxe dengan balkon dan area duduk nyaman. Pemandangan taman tropis resort.", 'fasilitas' => ['2 Tempat Tidur / 1 King-Size', 'AC', 'TV Kabel', 'Minibar', 'Balkon', 'Kamar Mandi Dalam', 'Air Panas', 'Wi-Fi Gratis']],
-    5 => ['id' => 5, 'nama' => 'Suite Kerinci C1', 'tipe' => 'Suite', 'kapasitas' => 6, 'harga' => 1200000, 'foto' => 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=900&h=600&fit=crop', 'deskripsi' => "Suite premium terbaik kami. Ruang tamu terpisah, kamar tidur mewah, jacuzzi pribadi, dan balkon panorama 180° menghadap Gunung Kerinci.\n\nPengalaman menginap paling eksklusif di resort kami.", 'fasilitas' => ['Ruang Tamu Terpisah', '1 King-Size Bed', 'Jacuzzi Pribadi', 'Balkon Panorama', 'AC', 'Smart TV 55"', 'Minibar Premium', 'Kamar Mandi Mewah', 'Bathrobe & Sandal', 'Wi-Fi High-Speed']],
-    6 => ['id' => 6, 'nama' => 'Standard Room D1', 'tipe' => 'Standard', 'kapasitas' => 2, 'harga' => 300000, 'foto' => 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=900&h=600&fit=crop', 'deskripsi' => "Kamar standar yang bersih dan nyaman. Pilihan tepat untuk backpacker atau traveler solo yang mengutamakan kenyamanan dengan budget terjangkau.", 'fasilitas' => ['Tempat Tidur Double', 'Kipas Angin', 'Kamar Mandi Dalam', 'Wi-Fi Gratis', 'Handuk']],
-];
+// Query kamar dari database
+$id = (int)($_GET['id'] ?? 0);
+$stmt = db()->prepare('SELECT id, nama, tipe, kapasitas, harga_per_malam AS harga, foto, deskripsi, fasilitas FROM kamar WHERE id = ?');
+$stmt->execute([$id]);
+$kamar = $stmt->fetch();
 
-$id = (int)($_GET['id'] ?? 1);
-$kamar = $kamarData[$id] ?? $kamarData[1];
+if (!$kamar) {
+    header('Location: ' . BASE_URL . '/tamu/kamar.php');
+    exit;
+}
+
+if (empty($kamar['foto'])) $kamar['foto'] = 'https://images.unsplash.com/photo-1618767689160-da3fb810aad7?w=900&h=600&fit=crop';
+elseif (!str_starts_with($kamar['foto'], 'http')) $kamar['foto'] = BASE_URL . '/uploads/' . $kamar['foto'];
+$kamar['fasilitas'] = !empty($kamar['fasilitas']) ? array_map('trim', explode(',', $kamar['fasilitas'])) : ['Wi-Fi Gratis', 'Kamar Mandi Dalam', 'Air Panas'];
 
 $pageTitle = $kamar['nama'];
 

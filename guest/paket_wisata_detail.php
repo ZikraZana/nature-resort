@@ -4,33 +4,38 @@
  */
 require_once __DIR__ . '/../config/config.php';
 
-$paketData = [
-    1 => ['id' => 1, 'nama' => 'Trekking Gunung Kerinci', 'kategori' => 'trekking', 'harga' => 350000, 'foto' => 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=900&h=600&fit=crop', 'deskripsi' => "Jelajahi puncak tertinggi Sumatera (3.805 mdpl) dengan pemandu profesional bersertifikat. Perjalanan ini menawarkan pengalaman trekking tak terlupakan melewati hutan tropis, padang edelweiss, dan puncak yang menawarkan pemandangan 360° spektakuler.\n\nDurasi: 2 hari 1 malam\nTerbit: termasuk tenda, sleeping bag, makanan, pemandu, dan porter.\nTingkat kesulitan: Menengah-Tinggi",
-        'jadwal' => [
-            ['tanggal' => '2026-07-20', 'kuota_maks' => 10, 'terpakai' => 2],
-            ['tanggal' => '2026-07-25', 'kuota_maks' => 10, 'terpakai' => 7],
-            ['tanggal' => '2026-08-01', 'kuota_maks' => 12, 'terpakai' => 0],
-            ['tanggal' => '2026-08-10', 'kuota_maks' => 10, 'terpakai' => 10],
-        ]],
-    2 => ['id' => 2, 'nama' => 'Susur Sungai Batang Merangin', 'kategori' => 'perahu', 'harga' => 200000, 'foto' => 'https://images.unsplash.com/photo-1529011060498-3553d7bee26a?w=900&h=600&fit=crop', 'deskripsi' => "Nikmati keindahan tepian sungai Batang Merangin dengan perahu tradisional. Suasana tenang dengan pemandangan tebing batu dan hutan tropis.\n\nDurasi: 3 jam (pagi/sore)\nTermasuk: perahu, jaket pelampung, pemandu, snack.",
-        'jadwal' => [
-            ['tanggal' => '2026-07-18', 'kuota_maks' => 15, 'terpakai' => 3],
-            ['tanggal' => '2026-07-22', 'kuota_maks' => 15, 'terpakai' => 10],
-        ]],
-    3 => ['id' => 3, 'nama' => 'River Tubing Sungai Kerinci', 'kategori' => 'perahu', 'harga' => 250000, 'foto' => 'https://images.unsplash.com/photo-1530866495561-507c83580c5d?w=900&h=600&fit=crop', 'deskripsi' => "Arungi jeram sungai Kerinci yang memacu adrenalin! Cocok untuk pencinta petualangan.\n\nDurasi: 2-3 jam\nTermasuk: tube, helm, pelampung, pemandu bersertifikat.\nTingkat kesulitan: Menengah",
-        'jadwal' => [
-            ['tanggal' => '2026-07-19', 'kuota_maks' => 8, 'terpakai' => 3],
-            ['tanggal' => '2026-07-26', 'kuota_maks' => 8, 'terpakai' => 8],
-        ]],
-    4 => ['id' => 4, 'nama' => 'Wisata Kuliner Lokal Kerinci', 'kategori' => 'kuliner', 'harga' => 150000, 'foto' => 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=900&h=600&fit=crop', 'deskripsi' => "Tur kuliner ke warung dan dapur tradisional Kerinci. Cicipi gulai ikan semah, dendeng batokok, kopi arabika Kayu Aro, dan jajanan pasar khas.\n\nDurasi: 4 jam (termasuk makan)\nTermasuk: transportasi, pemandu, semua makanan.",
-        'jadwal' => [
-            ['tanggal' => '2026-07-17', 'kuota_maks' => 20, 'terpakai' => 5],
-            ['tanggal' => '2026-07-24', 'kuota_maks' => 20, 'terpakai' => 12],
-        ]],
-];
+// Query paket dari database
+$id = (int)($_GET['id'] ?? 0);
+$stmt = db()->prepare('SELECT * FROM paket_wisata WHERE id = ?');
+$stmt->execute([$id]);
+$paket = $stmt->fetch();
 
-$id = (int)($_GET['id'] ?? 1);
-$paket = $paketData[$id] ?? $paketData[1];
+if (!$paket) {
+    header('Location: ' . BASE_URL . '/guest/paket_wisata.php');
+    exit;
+}
+
+// Default foto
+if (empty($paket['foto'])) {
+    $paket['foto'] = 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=900&h=600&fit=crop';
+} elseif (!str_starts_with($paket['foto'], 'http')) {
+    $paket['foto'] = BASE_URL . '/uploads/' . $paket['foto'];
+}
+
+// Query jadwal mendatang
+$stmtJadwal = db()->prepare(
+    "SELECT jw.id, jw.tanggal, jw.kuota_maksimal AS kuota_maks,
+            COALESCE(SUM(bpw.jumlah_peserta), 0) AS terpakai
+     FROM jadwal_wisata jw
+     LEFT JOIN booking_paket_wisata bpw ON bpw.jadwal_wisata_id = jw.id
+     LEFT JOIN booking b ON b.id = bpw.booking_id AND b.status NOT IN ('dibatalkan','ditolak')
+     WHERE jw.paket_wisata_id = ? AND jw.tanggal >= CURDATE()
+     GROUP BY jw.id
+     ORDER BY jw.tanggal"
+);
+$stmtJadwal->execute([$id]);
+$paket['jadwal'] = $stmtJadwal->fetchAll();
+
 $pageTitle = $paket['nama'];
 
 $kategoriLabels = ['trekking' => 'Trekking', 'perahu' => 'River / Perahu', 'kuliner' => 'Kuliner'];

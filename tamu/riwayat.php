@@ -1,23 +1,26 @@
 <?php
 /**
  * Riwayat Booking — Kincay Mania Hotel & Resort
+ * Query booking sungguhan milik user yang login.
  */
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/auth_check.php';
 require_role('tamu');
 $pageTitle = 'Riwayat Booking';
 
-// Dummy booking history
-$bookingList = [
-    ['id' => 1, 'kamar' => 'Kabin Pinus A1', 'checkin' => '2026-07-20', 'checkout' => '2026-07-23', 'total' => 2350000, 'status' => 'menunggu_pembayaran', 'created' => '2026-07-16 10:30:00'],
-    ['id' => 2, 'kamar' => 'Kamar Deluxe B1', 'checkin' => '2026-07-25', 'checkout' => '2026-07-27', 'total' => 1500000, 'status' => 'menunggu_verifikasi', 'created' => '2026-07-15 14:00:00'],
-    ['id' => 3, 'kamar' => 'Suite Kerinci C1', 'checkin' => '2026-08-01', 'checkout' => '2026-08-04', 'total' => 4600000, 'status' => 'dikonfirmasi', 'created' => '2026-07-10 09:00:00'],
-    ['id' => 4, 'kamar' => 'Standard Room D1', 'checkin' => '2026-06-15', 'checkout' => '2026-06-17', 'total' => 600000, 'status' => 'selesai', 'created' => '2026-06-10 11:00:00'],
-    ['id' => 5, 'kamar' => 'Kabin Pinus A2', 'checkin' => '2026-06-20', 'checkout' => '2026-06-22', 'total' => 900000, 'status' => 'dibatalkan', 'created' => '2026-06-18 16:00:00'],
-    ['id' => 6, 'kamar' => 'Kamar Deluxe B1', 'checkin' => '2026-07-05', 'checkout' => '2026-07-07', 'total' => 1500000, 'status' => 'menunggu_refund', 'created' => '2026-07-01 08:00:00', 'refund_nominal' => 750000],
-    ['id' => 7, 'kamar' => 'Kabin Pinus A1', 'checkin' => '2026-05-10', 'checkout' => '2026-05-12', 'total' => 900000, 'status' => 'refund_selesai', 'created' => '2026-05-05 12:00:00', 'refund_nominal' => 450000],
-    ['id' => 8, 'kamar' => 'Standard Room D1', 'checkin' => '2026-06-01', 'checkout' => '2026-06-02', 'total' => 300000, 'status' => 'ditolak', 'created' => '2026-05-28 10:00:00'],
-];
+// Query booking milik user yang login
+$stmt = db()->prepare(
+    'SELECT b.id, b.total_harga, b.status, b.tanggal_checkin, b.tanggal_checkout, b.created_at,
+            k.nama AS kamar_nama,
+            r.nominal_refund
+     FROM booking b
+     JOIN kamar k ON k.id = b.kamar_id
+     LEFT JOIN refund r ON r.booking_id = b.id
+     WHERE b.user_id = ?
+     ORDER BY b.created_at DESC'
+);
+$stmt->execute([$_SESSION['user_id']]);
+$bookingList = $stmt->fetchAll();
 
 $statusLabels = [
     'menunggu_pembayaran' => ['label' => 'Menunggu Pembayaran', 'color' => 'bg-warning-light text-warning', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
@@ -37,6 +40,13 @@ include __DIR__ . '/../includes/navbar_tamu.php';
 
     <section class="pt-24 pb-16 bg-cream min-h-screen">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Flash Message -->
+            <?php $flash = get_flash(); if ($flash): ?>
+            <div class="mb-6 p-4 bg-<?= $flash['type'] === 'success' ? 'success-light' : ($flash['type'] === 'warning' ? 'warning-light' : 'danger-light') ?> rounded-xl text-sm text-<?= $flash['type'] === 'success' ? 'success' : ($flash['type'] === 'warning' ? 'warning' : 'danger') ?>">
+                <?= e($flash['message']) ?>
+            </div>
+            <?php endif; ?>
+
             <div class="flex justify-between items-center mb-8">
                 <div>
                     <h1 class="font-sans text-3xl text-dark font-bold">Riwayat Booking</h1>
@@ -48,9 +58,16 @@ include __DIR__ . '/../includes/navbar_tamu.php';
                 </a>
             </div>
 
+            <?php if (empty($bookingList)): ?>
+            <div class="bg-white rounded-2xl p-12 shadow-sm text-center">
+                <svg class="w-16 h-16 mx-auto text-earth/20 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <p class="text-earth mb-4">Belum ada riwayat booking.</p>
+                <a href="<?= BASE_URL ?>/tamu/kamar.php" class="px-6 py-2.5 bg-primary hover:bg-primary-light text-white font-semibold rounded-full transition-all text-sm">Mulai Booking</a>
+            </div>
+            <?php else: ?>
             <div class="space-y-4">
                 <?php foreach ($bookingList as $b):
-                    $s = $statusLabels[$b['status']];
+                    $s = $statusLabels[$b['status']] ?? ['label' => ucfirst($b['status']), 'color' => 'bg-gray-100 text-gray-500'];
                 ?>
                 <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
                     <div class="p-6">
@@ -60,20 +77,20 @@ include __DIR__ . '/../includes/navbar_tamu.php';
                                     <span class="text-sm font-mono text-earth">#BK-<?= str_pad($b['id'], 4, '0', STR_PAD_LEFT) ?></span>
                                     <span class="px-3 py-1 <?= $s['color'] ?> text-xs font-medium rounded-full"><?= $s['label'] ?></span>
                                 </div>
-                                <h3 class="font-sans text-lg font-semibold text-dark"><?= e($b['kamar']) ?></h3>
+                                <h3 class="font-sans text-lg font-semibold text-dark"><?= e($b['kamar_nama']) ?></h3>
                                 <div class="flex flex-wrap gap-4 mt-2 text-sm text-earth">
                                     <span class="flex items-center gap-1">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                        <?= date('d M', strtotime($b['checkin'])) ?> — <?= date('d M Y', strtotime($b['checkout'])) ?>
+                                        <?= date('d M', strtotime($b['tanggal_checkin'])) ?> — <?= date('d M Y', strtotime($b['tanggal_checkout'])) ?>
                                     </span>
-                                    <span>Dibuat: <?= date('d M Y H:i', strtotime($b['created'])) ?></span>
+                                    <span>Dibuat: <?= date('d M Y H:i', strtotime($b['created_at'])) ?></span>
                                 </div>
-                                <?php if (!empty($b['refund_nominal'])): ?>
-                                <p class="text-sm mt-2 text-warning font-medium">Refund: <?= format_rupiah($b['refund_nominal']) ?></p>
+                                <?php if (!empty($b['nominal_refund'])): ?>
+                                <p class="text-sm mt-2 text-warning font-medium">Refund: <?= format_rupiah($b['nominal_refund']) ?></p>
                                 <?php endif; ?>
                             </div>
                             <div class="text-right shrink-0">
-                                <p class="text-2xl font-bold text-primary"><?= format_rupiah($b['total']) ?></p>
+                                <p class="text-2xl font-bold text-primary"><?= format_rupiah($b['total_harga']) ?></p>
                                 <div class="flex gap-2 mt-3 justify-end">
                                     <?php if ($b['status'] === 'menunggu_pembayaran'): ?>
                                     <a href="<?= BASE_URL ?>/tamu/upload_bukti.php?booking_id=<?= $b['id'] ?>" class="px-4 py-2 bg-primary hover:bg-primary-light text-white text-xs font-medium rounded-full transition-colors">Upload Bukti</a>
@@ -99,6 +116,7 @@ include __DIR__ . '/../includes/navbar_tamu.php';
                 </div>
                 <?php endforeach; ?>
             </div>
+            <?php endif; ?>
         </div>
     </section>
 

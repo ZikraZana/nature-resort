@@ -11,13 +11,28 @@ $checkin = $_GET['checkin'] ?? '';
 $checkout = $_GET['checkout'] ?? '';
 $showResults = !empty($checkin) && !empty($checkout);
 
-// Dummy results
-$kamarTersedia = [
-    ['id' => 1, 'nama' => 'Kabin Pinus A1', 'tipe' => 'Kabin', 'kapasitas' => 2, 'harga' => 450000, 'foto' => 'https://images.unsplash.com/photo-1618767689160-da3fb810aad7?w=400&h=300&fit=crop'],
-    ['id' => 3, 'nama' => 'Kamar Deluxe B1', 'tipe' => 'Deluxe', 'kapasitas' => 4, 'harga' => 750000, 'foto' => 'https://images.unsplash.com/photo-1590490360182-c33d955f4c4e?w=400&h=300&fit=crop'],
-    ['id' => 5, 'nama' => 'Suite Kerinci C1', 'tipe' => 'Suite', 'kapasitas' => 6, 'harga' => 1200000, 'foto' => 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400&h=300&fit=crop'],
-    ['id' => 6, 'nama' => 'Standard Room D1', 'tipe' => 'Standard', 'kapasitas' => 2, 'harga' => 300000, 'foto' => 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop'],
-];
+// Query ketersediaan kamar dari database
+$kamarTersedia = [];
+if ($showResults && $checkin < $checkout) {
+    $stmt = db()->prepare(
+        "SELECT id, nama, tipe, kapasitas, harga_per_malam AS harga, foto
+         FROM kamar
+         WHERE status_default = 'tersedia'
+           AND id NOT IN (
+               SELECT kamar_id FROM booking
+               WHERE status NOT IN ('dibatalkan','ditolak')
+                 AND tanggal_checkin < ? AND tanggal_checkout > ?
+           )
+         ORDER BY tipe, nama"
+    );
+    $stmt->execute([$checkout, $checkin]);
+    $kamarTersedia = $stmt->fetchAll();
+    foreach ($kamarTersedia as &$k) {
+        if (empty($k['foto'])) $k['foto'] = 'https://images.unsplash.com/photo-1618767689160-da3fb810aad7?w=400&h=300&fit=crop';
+        elseif (!str_starts_with($k['foto'], 'http')) $k['foto'] = BASE_URL . '/uploads/' . $k['foto'];
+    }
+    unset($k);
+}
 
 $jumlahMalam = 0;
 if ($showResults && strtotime($checkout) > strtotime($checkin)) {
